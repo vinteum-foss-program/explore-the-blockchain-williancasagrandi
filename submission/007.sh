@@ -2,6 +2,7 @@
 hash=$(bitcoin-cli getblockhash 123321)
 listofTXID=$(bitcoin-cli getblock $hash | jq -r '.tx[]')
 
+declare -a utxo
 for txid in $listofTXID; do
     txHEX=$(bitcoin-cli getrawtransaction $txid)
     txJSON=$(bitcoin-cli decoderawtransaction $txHEX)
@@ -9,7 +10,11 @@ for txid in $listofTXID; do
         unspentOutput=$(bitcoin-cli gettxout $txid $vout)
         if [ ! -z "$unspentOutput" ]; then
             AddressOutput=$(echo $txJSON | jq -r ".vout[$vout].scriptPubKey.address")
-            echo "$AddressOutput"
+            utxo+=("$AddressOutput")
         fi
     done
+done
+
+for AddressOutput in "${utxo}"; do
+    echo "$AddressOutput"
 done
